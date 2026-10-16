@@ -17,10 +17,13 @@ export interface BrandConfig {
   name: string;
   nameHighlight: string;
   tagline: string;
+  bannerUrl?: string;
   logoUrl: string;
   logoType: 'image' | 'text' | 'both';
   logoHeight: number;
   primaryColor: string; // e.g. '#ff142b'
+  ogImageUrl?: string;
+  faviconUrl?: string;
   whatsappNumber: string; // e.g. '5562984114810'
   whatsappDisplay: string; // e.g. '(62) 98411-4810'
   whatsappMessage: string;

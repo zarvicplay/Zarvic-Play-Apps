@@ -18,6 +18,8 @@ import {
   Edit2,
   Sparkles,
   Info,
+  Share2,
+  Globe,
 } from 'lucide-react';
 
 interface BrandCustomizerModalProps {
@@ -49,7 +51,7 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
   onOpenAppEditor,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'logo' | 'whatsapp' | 'pix' | 'apps' | 'backup'>('logo');
+  const [activeTab, setActiveTab] = useState<'logo' | 'opengraph' | 'whatsapp' | 'pix' | 'apps' | 'backup'>('logo');
   const [brandForm, setBrandForm] = useState<BrandConfig>(brand);
   const [savedFeedback, setSavedFeedback] = useState(false);
 
@@ -71,6 +73,69 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
             ...prev,
             logoUrl: event.target!.result as string,
             logoType: prev.logoType === 'text' ? 'both' : prev.logoType,
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle local image file upload for hero banner cover
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        alert('A imagem é muito pesada. Por favor escolha uma imagem de até 8MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setBrandForm((prev) => ({
+            ...prev,
+            bannerUrl: event.target!.result as string,
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle local image file upload for Favicon (Browser Tab Icon)
+  const handleFaviconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('O favicon deve ter até 2MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setBrandForm((prev) => ({
+            ...prev,
+            faviconUrl: event.target!.result as string,
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle local image file upload for OpenGraph Social Share Card
+  const handleOgImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        alert('A imagem do OpenGraph deve ter até 8MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setBrandForm((prev) => ({
+            ...prev,
+            ogImageUrl: event.target!.result as string,
           }));
         }
       };
@@ -214,6 +279,18 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('opengraph')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition cursor-pointer ${
+              activeTab === 'opengraph'
+                ? 'bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-md'
+                : 'bg-[#1c0f12] text-neutral-300 hover:text-white hover:bg-[#2c151a]'
+            }`}
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Open Graph & Favicon</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('whatsapp')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition cursor-pointer ${
               activeTab === 'whatsapp'
@@ -273,6 +350,18 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
                   Pré-visualização do seu Topo / Header
                 </span>
 
+                {/* Banner Preview if present */}
+                {brandForm.bannerUrl ? (
+                  <div className="w-full max-w-xl mb-3 rounded-xl overflow-hidden border border-red-500/40 shadow-lg">
+                    <img
+                      src={brandForm.bannerUrl}
+                      alt="Banner Preview"
+                      className="w-full h-auto object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                ) : null}
+
                 <div className="flex items-center justify-center gap-3 py-2">
                   {brandForm.logoUrl && (brandForm.logoType === 'image' || brandForm.logoType === 'both') ? (
                     <img
@@ -280,10 +369,11 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
                       alt="Logo Preview"
                       style={{ height: `${brandForm.logoHeight}px` }}
                       className="max-w-[240px] object-contain rounded-lg p-1 bg-black/40 border border-[#542126]"
+                      referrerPolicy="no-referrer"
                     />
                   ) : null}
 
-                  {(brandForm.logoType === 'text' || brandForm.logoType === 'both' || !brandForm.logoUrl) && (
+                  {!brandForm.bannerUrl && (brandForm.logoType === 'text' || brandForm.logoType === 'both' || !brandForm.logoUrl) && (
                     <span className="text-2xl sm:text-3xl font-black uppercase tracking-wider">
                       <span className="text-white">{brandForm.name}</span>{' '}
                       <span style={{ color: brandForm.primaryColor }}>{brandForm.nameHighlight}</span>
@@ -291,7 +381,59 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
                   )}
                 </div>
 
-                <p className="text-xs text-neutral-400 mt-1">{brandForm.tagline}</p>
+                <p className="text-xs text-neutral-400 mt-1 font-medium">{brandForm.tagline}</p>
+              </div>
+
+              {/* Upload Banner Cover File */}
+              <div className="p-4 rounded-xl border border-[#3e171c] bg-[#170e10] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-white text-sm">Capa / Banner do Topo</h4>
+                    <p className="text-xs text-neutral-400">
+                      Banner panorâmico exibido no topo (Central de Downloads Zarvic Play).
+                    </p>
+                  </div>
+                  {brandForm.bannerUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setBrandForm({ ...brandForm, bannerUrl: '' })}
+                      className="text-xs text-red-400 hover:text-red-300 font-medium underline cursor-pointer"
+                    >
+                      Remover Capa
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <label className="flex-1 flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#61242c] hover:border-red-500 rounded-xl bg-[#0d0708] cursor-pointer transition group">
+                    <Upload className="w-6 h-6 text-cyan-400 group-hover:scale-110 transition-transform mb-1" />
+                    <span className="font-semibold text-white text-xs">
+                      Trocar Imagem da Capa / Banner
+                    </span>
+                    <span className="text-[10px] text-neutral-500 mt-0.5">
+                      Selecione uma imagem panorâmica para o topo
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerUpload}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="flex-1 space-y-2">
+                    <label className="block text-xs font-semibold text-neutral-300">
+                      Ou digite a URL da Imagem da Capa:
+                    </label>
+                    <input
+                      type="url"
+                      value={brandForm.bannerUrl || ''}
+                      onChange={(e) => setBrandForm({ ...brandForm, bannerUrl: e.target.value })}
+                      placeholder="https://meusite.com/meu-banner.png"
+                      className="w-full px-3 py-2 rounded-lg bg-[#0d0708] border border-[#481c22] text-white text-xs focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Upload Logo File */}
@@ -488,6 +630,226 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
                       </span>
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Callout to OpenGraph & Favicon inside Logo tab */}
+              <div className="p-3.5 rounded-xl border border-cyan-900/60 bg-cyan-950/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-900/50 flex items-center justify-center flex-shrink-0 text-cyan-300">
+                    <Share2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-white text-xs">Foto do WhatsApp (Open Graph) & Favicon</h5>
+                    <p className="text-[11px] text-neutral-400">Configure a imagem de compartilhamento e o ícone da aba do navegador.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('opengraph')}
+                  className="px-3 py-1.5 rounded-lg bg-cyan-900/60 hover:bg-cyan-800 text-cyan-200 border border-cyan-700/60 text-xs font-semibold transition cursor-pointer flex-shrink-0"
+                >
+                  Configurar Open Graph & Favicon →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: OPEN GRAPH & FAVICON */}
+          {activeTab === 'opengraph' && (
+            <div className="space-y-6">
+              {/* SECTION 1: OPEN GRAPH (FOTO WHATSAPP & REDES) */}
+              <div className="p-4 sm:p-5 rounded-xl border border-[#3e171c] bg-[#170e10] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-red-950/80 border border-red-800/60 flex items-center justify-center text-red-400">
+                      <Share2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">Open Graph (Foto de Compartilhamento)</h4>
+                      <p className="text-xs text-neutral-400">
+                        Esta é a foto que aparece automaticamente quando você envia o link no WhatsApp, Telegram e redes.
+                      </p>
+                    </div>
+                  </div>
+
+                  {brandForm.ogImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setBrandForm({ ...brandForm, ogImageUrl: '/og-image.jpg' })}
+                      className="text-xs text-red-400 hover:text-red-300 font-medium underline cursor-pointer"
+                    >
+                      Restaurar Foto Oficial
+                    </button>
+                  )}
+                </div>
+
+                {/* WhatsApp Link Card Simulation Mockup */}
+                <div className="p-3.5 rounded-xl bg-[#0b1410] border border-emerald-900/50 max-w-md mx-auto">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Pré-visualização do Link no WhatsApp
+                  </div>
+
+                  <div className="rounded-lg overflow-hidden border border-emerald-800/40 bg-[#12221b] shadow-md">
+                    <div className="w-full aspect-video max-h-[190px] overflow-hidden bg-black flex items-center justify-center">
+                      <img
+                        src={brandForm.ogImageUrl || '/og-image.jpg'}
+                        alt="OpenGraph Preview"
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <div className="p-2.5">
+                      <h5 className="font-bold text-white text-xs truncate">
+                        {brandForm.name} {brandForm.nameHighlight} | Central de Downloads APK
+                      </h5>
+                      <p className="text-[11px] text-neutral-300 line-clamp-2 mt-0.5 leading-snug">
+                        {brandForm.tagline || 'Central de downloads de aplicativos APK para TV Box, Smart TV e Celulares com suporte WhatsApp.'}
+                      </p>
+                      <span className="text-[10px] text-emerald-400/80 font-mono mt-1 block">
+                        zarvicplay.app
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Upload and URL input */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                  <label className="flex-1 flex flex-col items-center justify-center p-3.5 border-2 border-dashed border-[#61242c] hover:border-red-500 rounded-xl bg-[#0d0708] cursor-pointer transition group">
+                    <Upload className="w-5 h-5 text-red-400 group-hover:scale-110 transition-transform mb-1" />
+                    <span className="font-semibold text-white text-xs">
+                      Fazer Upload da Foto do Open Graph
+                    </span>
+                    <span className="text-[10px] text-neutral-500 mt-0.5">
+                      Recomendado formato 16:9 (ex: 1280x720 ou 1200x630)
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleOgImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="flex-1 space-y-2">
+                    <label className="block text-xs font-semibold text-neutral-300">
+                      Ou digite a URL da Imagem Open Graph:
+                    </label>
+                    <input
+                      type="url"
+                      value={brandForm.ogImageUrl || ''}
+                      onChange={(e) => setBrandForm({ ...brandForm, ogImageUrl: e.target.value })}
+                      placeholder="https://meusite.com/og-image.jpg"
+                      className="w-full px-3 py-2 rounded-lg bg-[#0d0708] border border-[#481c22] text-white text-xs focus:outline-none focus:border-red-500"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setBrandForm({ ...brandForm, ogImageUrl: '/og-image.jpg' })}
+                        className="text-[10px] px-2 py-1 rounded bg-[#2b1014] hover:bg-[#3d181f] text-red-300 border border-red-800/60 cursor-pointer"
+                      >
+                        Usar Arte Oficial Zarvic Play
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: FAVICON (ÍCONE DA ABA DO NAVEGADOR) */}
+              <div className="p-4 sm:p-5 rounded-xl border border-[#3e171c] bg-[#170e10] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-950/80 border border-blue-800/60 flex items-center justify-center text-blue-400">
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">Favicon (Ícone da Aba do Navegador)</h4>
+                      <p className="text-xs text-neutral-400">
+                        O pequeno ícone que aparece ao lado do nome do site na aba do navegador do seu visitante.
+                      </p>
+                    </div>
+                  </div>
+
+                  {brandForm.faviconUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setBrandForm({ ...brandForm, faviconUrl: '' })}
+                      className="text-xs text-red-400 hover:text-red-300 font-medium underline cursor-pointer"
+                    >
+                      Remover Favicon
+                    </button>
+                  )}
+                </div>
+
+                {/* Browser Tab Simulation Mockup */}
+                <div className="p-3 rounded-xl bg-[#0a0809] border border-[#4a1c22] max-w-md mx-auto">
+                  <span className="text-[10px] text-neutral-400 font-medium block mb-1.5">
+                    Pré-visualização da Aba no Navegador:
+                  </span>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-t-lg bg-[#221619] border-t border-x border-[#59232c] text-white text-xs max-w-xs shadow">
+                    <img
+                      src={brandForm.faviconUrl || brandForm.ogImageUrl || '/og-image.jpg'}
+                      alt="Favicon"
+                      className="w-4 h-4 rounded-sm object-cover flex-shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="truncate font-medium text-xs">
+                      {brandForm.name} {brandForm.nameHighlight} | Central de Downloads
+                    </span>
+                    <span className="text-neutral-400 text-[10px] ml-1">×</span>
+                  </div>
+                  <div className="h-1 bg-[#221619] border-t border-[#59232c] rounded-b-md" />
+                </div>
+
+                {/* Upload and URL input */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                  <label className="flex-1 flex flex-col items-center justify-center p-3.5 border-2 border-dashed border-[#61242c] hover:border-red-500 rounded-xl bg-[#0d0708] cursor-pointer transition group">
+                    <Upload className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform mb-1" />
+                    <span className="font-semibold text-white text-xs">
+                      Fazer Upload do Ícone Favicon
+                    </span>
+                    <span className="text-[10px] text-neutral-500 mt-0.5">
+                      Arquivos .png, .ico ou .svg (quadrado: 32x32 ou 64x64)
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*,.ico"
+                      onChange={handleFaviconUpload}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="flex-1 space-y-2">
+                    <label className="block text-xs font-semibold text-neutral-300">
+                      Ou digite a URL da Imagem do Favicon:
+                    </label>
+                    <input
+                      type="url"
+                      value={brandForm.faviconUrl || ''}
+                      onChange={(e) => setBrandForm({ ...brandForm, faviconUrl: e.target.value })}
+                      placeholder="https://meusite.com/favicon.png"
+                      className="w-full px-3 py-2 rounded-lg bg-[#0d0708] border border-[#481c22] text-white text-xs focus:outline-none focus:border-red-500"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      {brandForm.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setBrandForm({ ...brandForm, faviconUrl: brandForm.logoUrl })}
+                          className="text-[10px] px-2 py-1 rounded bg-[#2b1014] hover:bg-[#3d181f] text-neutral-300 border border-neutral-700 cursor-pointer"
+                        >
+                          Usar mesma foto do Logo
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setBrandForm({ ...brandForm, faviconUrl: '/og-image.jpg' })}
+                        className="text-[10px] px-2 py-1 rounded bg-[#2b1014] hover:bg-[#3d181f] text-neutral-300 border border-neutral-700 cursor-pointer"
+                      >
+                        Usar Arte Zarvic Play
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

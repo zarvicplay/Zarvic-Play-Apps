@@ -1,13 +1,16 @@
 import { AppItem, BrandConfig } from '../types';
 
 export const DEFAULT_BRAND: BrandConfig = {
-  name: 'CASH',
-  nameHighlight: 'MOVIE',
+  name: 'ZARVIC',
+  nameHighlight: 'PLAY',
   tagline: 'Central Oficial de Downloads de Aplicativos para TV Box, Smart TV e Android',
-  logoUrl: '', // Can be filled by user or use built-in logo
+  bannerUrl: '/src/assets/images/zarvic_play_banner_1792121254151.jpg',
+  logoUrl: '',
   logoType: 'both',
   logoHeight: 52,
   primaryColor: '#ff142b',
+  ogImageUrl: '/og-image.jpg',
+  faviconUrl: '/og-image.jpg',
   whatsappNumber: '5562984114810',
   whatsappDisplay: '(62) 98411-4810',
   whatsappMessage: 'Olá, gostaria de adquirir a lista de canais / filmes / séries.',

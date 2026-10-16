@@ -13,6 +13,7 @@ import { QRCodeModal } from './components/QRCodeModal';
 import { InstallGuideModal } from './components/InstallGuideModal';
 import { BrandCustomizerModal } from './components/BrandCustomizerModal';
 import { AppEditModal } from './components/AppEditModal';
+import { useAdminMode } from './utils/admin';
 import {
   Search,
   X,
@@ -30,6 +31,9 @@ const STORAGE_BRAND_KEY = 'apk_center_brand_config_v1';
 const STORAGE_APPS_KEY = 'apk_center_apps_list_v1';
 
 export default function App() {
+  // Admin detection: Only shows edit/personalize tools inside Google AI Studio / dev environment
+  const { isDevEnvironment, isAdmin, previewAsClient, setPreviewAsClient } = useAdminMode();
+
   // Load from localStorage or defaults
   const [brand, setBrand] = useState<BrandConfig>(() => {
     try {
@@ -39,6 +43,11 @@ export default function App() {
         if (parsed.pixKey === 'douglasgsia@jim.com' || !parsed.pixKey) {
           parsed.pixKey = 'zarvicplay@gmail.com';
           parsed.pixReceiverName = 'ZARVIC PLAY';
+        }
+        if (!parsed.bannerUrl || parsed.name === 'CASH') {
+          parsed.bannerUrl = '/src/assets/images/zarvic_play_banner_1792121254151.jpg';
+          parsed.name = 'ZARVIC';
+          parsed.nameHighlight = 'PLAY';
         }
         return { ...DEFAULT_BRAND, ...parsed };
       }
@@ -75,6 +84,31 @@ export default function App() {
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
   const [isAppEditorOpen, setIsAppEditorOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<AppItem | null>(null);
+
+  // Dynamically update favicon in browser tab
+  useEffect(() => {
+    if (brand.faviconUrl) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      link.href = brand.faviconUrl;
+    }
+  }, [brand.faviconUrl]);
+
+  // Dynamically update og:image and twitter:image meta tags
+  useEffect(() => {
+    if (brand.ogImageUrl) {
+      const ogImg = document.querySelector('meta[property="og:image"]');
+      if (ogImg) ogImg.setAttribute('content', brand.ogImageUrl);
+      const ogImgSec = document.querySelector('meta[property="og:image:secure_url"]');
+      if (ogImgSec) ogImgSec.setAttribute('content', brand.ogImageUrl);
+      const twImg = document.querySelector('meta[name="twitter:image"]');
+      if (twImg) twImg.setAttribute('content', brand.ogImageUrl);
+    }
+  }, [brand.ogImageUrl]);
 
   // Save changes to localStorage
   const handleSaveBrand = (newBrand: BrandConfig) => {
@@ -157,6 +191,10 @@ export default function App() {
       {/* Top Banner / Hero with User's Logo */}
       <HeaderBanner
         brand={brand}
+        isAdmin={isAdmin}
+        isDevEnvironment={isDevEnvironment}
+        previewAsClient={previewAsClient}
+        onToggleClientPreview={() => setPreviewAsClient(!previewAsClient)}
         onOpenCustomizer={() => setIsCustomizerOpen(true)}
         onOpenGuide={() => setIsGuideOpen(true)}
       />
@@ -239,7 +277,7 @@ export default function App() {
                 <p className="text-xs sm:text-sm text-neutral-400 max-w-md">
                   Não encontramos nenhum APK com o termo "<strong>{searchTerm}</strong>". Tente buscar por outro nome ou limpe a busca.
                 </p>
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
                   <button
                     onClick={() => {
                       setSearchTerm('');
@@ -249,12 +287,14 @@ export default function App() {
                   >
                     Ver Todos os Aplicativos
                   </button>
-                  <button
-                    onClick={() => handleOpenAppEditor()}
-                    className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold cursor-pointer"
-                  >
-                    Adicionar Novo APK
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleOpenAppEditor()}
+                      className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold cursor-pointer"
+                    >
+                      Adicionar Novo APK
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -277,23 +317,26 @@ export default function App() {
           <aside className="lg:col-span-4 lg:sticky lg:top-6 space-y-5">
             <SidebarSupport
               brand={brand}
+              isAdmin={isAdmin}
               onOpenCustomizer={() => setIsCustomizerOpen(true)}
             />
           </aside>
         </div>
       </main>
 
-      {/* Floating Action Button to Customize Logo & Brand */}
-      <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
-        <button
-          onClick={() => setIsCustomizerOpen(true)}
-          className="group flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-red-950/80 border border-red-400/50 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
-          title="Coloque sua própria Logo, Cores e WhatsApp"
-        >
-          <Sparkles className="w-4 h-4 text-amber-300 animate-spin group-hover:rotate-180 transition-transform" />
-          <span>Colocar Minha Logo</span>
-        </button>
-      </div>
+      {/* Floating Action Button: ONLY visible in AI Studio Dev Mode */}
+      {isAdmin && (
+        <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
+          <button
+            onClick={() => setIsCustomizerOpen(true)}
+            className="group flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-red-950/80 border border-red-400/50 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            title="Coloque sua própria Logo, Cores e WhatsApp (Invisível no link final do cliente)"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300 animate-spin group-hover:rotate-180 transition-transform" />
+            <span>Colocar Minha Logo</span>
+          </button>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-[#3e171c] bg-[#090506] py-8 px-4 text-center text-xs text-[#a9a0a0]">
@@ -327,13 +370,17 @@ export default function App() {
             >
               Guia TV Box
             </button>
-            <span>•</span>
-            <button
-              onClick={() => setIsCustomizerOpen(true)}
-              className="text-red-400 hover:text-red-300 underline cursor-pointer font-semibold"
-            >
-              Personalizar Marca & Logo
-            </button>
+            {isAdmin && (
+              <>
+                <span>•</span>
+                <button
+                  onClick={() => setIsCustomizerOpen(true)}
+                  className="text-red-400 hover:text-red-300 underline cursor-pointer font-semibold"
+                >
+                  Personalizar Marca & Logo
+                </button>
+              </>
+            )}
             <span>•</span>
             <button
               onClick={scrollToTop}
@@ -357,25 +404,29 @@ export default function App() {
         onClose={() => setIsGuideOpen(false)}
       />
 
-      <BrandCustomizerModal
-        isOpen={isCustomizerOpen}
-        brand={brand}
-        apps={apps}
-        onSaveBrand={handleSaveBrand}
-        onSaveApps={handleSaveApps}
-        onOpenAppEditor={handleOpenAppEditor}
-        onClose={() => setIsCustomizerOpen(false)}
-      />
+      {isAdmin && (
+        <>
+          <BrandCustomizerModal
+            isOpen={isCustomizerOpen}
+            brand={brand}
+            apps={apps}
+            onSaveBrand={handleSaveBrand}
+            onSaveApps={handleSaveApps}
+            onOpenAppEditor={handleOpenAppEditor}
+            onClose={() => setIsCustomizerOpen(false)}
+          />
 
-      <AppEditModal
-        isOpen={isAppEditorOpen}
-        app={editingApp}
-        onSave={handleSaveSingleApp}
-        onClose={() => {
-          setIsAppEditorOpen(false);
-          setEditingApp(null);
-        }}
-      />
+          <AppEditModal
+            isOpen={isAppEditorOpen}
+            app={editingApp}
+            onSave={handleSaveSingleApp}
+            onClose={() => {
+              setIsAppEditorOpen(false);
+              setEditingApp(null);
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }

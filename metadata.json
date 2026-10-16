@@ -1,6 +1,8 @@
 {
-  "name": "Central de Downloads APK",
-  "description": "Central de downloads de aplicativos APK para TV Box, Smart TV e Celulares com personalização de logo, catálogo e suporte WhatsApp.",
+  "name": "Zarvic Play | Central de Downloads APK",
+  "description": "Central de downloads de aplicativos APK para TV Box, Smart TV e Celulare e suporte WhatsApp.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
